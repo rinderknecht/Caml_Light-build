@@ -216,19 +216,19 @@ errors:
 * `.`*mod*`.mli.err` and `.`*mod*`.ml.err` contain compilation error
    messages about *mod*`.mli` and *mod*`.ml`, respectively;
 
-* '.'*mod*'.mli.ign' and '.'*mod*'.ml.ign' are empty files indicating
-  that *mod*'.mli' and *mod*'.ml', respectively, should be ignored and
-  not compiled; (Note that, whilst the presence of a '.*.err' file
-  implies the existence of a corresponding '.*.ign' file, the contrary
+* `.`*mod*`.mli.ign` and `.`*mod*`.ml.ign` are empty files indicating
+  that *mod*`.mli` and *mod*`.ml`, respectively, should be ignored and
+  not compiled; (Note that, whilst the presence of a `.*.err` file
+  implies the existence of a corresponding `.*.ign` file, the contrary
   does not always hold because a file may be ignored because its
   compilation would be bound to fail due to a transitive dependency on
   a faulty module.)
 
-* '.'*mod*'.mll.err' and '.'*mod*'.mly.err' contain an error message
-     from 'camllex' about *mod*'.mll' and an error message from
-     'camlyacc' about *mod*'.mly', respectively;
+* `.`*mod*`.mll.err` and `.`*mod*`.mly.err` contain an error message
+     from `camllex` about *mod*`.mll` and an error message from
+     `camlyacc` about *mod*`.mly`, respectively;
 
-* '.'*mod*'.err' and '.'*mod*'.opt.err' contain error messages from
+* `.`*mod*`.err` and `.`*mod*`.opt.err` contain error messages from
      the linker (respectively, in bytecode and native code).
 
 Under no circumstances is the programmer to edit these metadata.
