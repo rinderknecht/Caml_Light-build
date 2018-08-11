@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+# To scan a Caml Light source file, find all references to external 
+# modules (#open "foo";; or foo__bar), and output the dependencies 
+# on standard output.
+#
+# Usage:    camldep [-I path] <file> ...
+
+while ($#ARGV >= 0) {
+  $_ = shift(@ARGV);
+  if (/^-I(.*)$/) {
+    $dir = $1 ? $1 : shift(@ARGV);
+    $dir =~ s|/$||;
+    unshift(@path, $dir); }
+  elsif (/(.*)\.mli$/ || /(.*)\.zi$/) {
+    scan_source ($_, "$1.zi"); }
+  elsif (/(.*)\.ml$/ || /(.*)\.zo$/) {
+    scan_source ($_, "$1.zo"); }
+  else { die "Don't know what to do with $_"; }
+}
+
+sub scan_source {
+  local ($source_name, $target_name) = @_;
+  $modname = $target_name;
+  $modname =~ s|^.*/||;
+  $modname =~ s|\.z[io]$||;
+  undef(%imports);
+
+  open (SRC, $source_name) || return;
+  while (<SRC>) {
+    if (m/#\s*open\s*"([^"]*)"/) { $imports{$1} = 1; }
+    while (m/([a-zA-Z0-9_]+)__/) { $imports{$1} = 1; $_ = $'; } #'
+  }
+
+  close(SRC);
+  undef(@deps);
+
+  if ($target_name =~ m/(.*)\.zo$/) { push(@deps, "$1"); }
+
+  foreach $modl (keys(%imports)) {
+    next if ($modl eq $modname);
+    if ($dep = find_path ("$modl.mli")) {
+      $dep =~ s/\.mli$//; push(@deps, $dep); }
+    elsif ($dep = find_path ("$modl.ml")) {
+      $dep =~ s/\.ml$//; push(@deps, $dep); }
+    else { push(@deps, $modl); }
+  }
+
+  if ($#deps >= 0) {
+    print "$target_name: ";
+    foreach $dep (@deps) { print $dep, " "; }
+    print "\n";
+  }
+}
+
+sub find_path {
+  local ($filename) = @_;
+  if (-r $filename) { return $filename; }
+  foreach $dir (@path) {
+    if (-r "$dir/$filename") { return "$dir/$filename"; }
+  }
+  return 0;
+}
