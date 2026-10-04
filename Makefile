@@ -1,5 +1,5 @@
 # GNU Makefile (>= 3.82) for building Caml Light projects
-# (c) 2012, 2013 Christian Rinderknecht (rinderknecht@free.fr)
+# (c) 2012-2026 Christian Rinderknecht (rinderknecht@free.fr)
 #
 # You may freely modify and redistribute, as long as I am credited as
 # the original author and the same terms apply to the recipients,
@@ -9,26 +9,26 @@
 # as well as the modified source of [camldep].
 
 # ====================================================================
-# General Settings (GNU Make 4.0 recommended)
+# General Settings (GNU Make 4.1 recommended)
 
-ifeq (4.1,${MAKE_VERSION})
-MAKEFLAGS =-Rrsij -Oline
-else
-  ifeq (4.0,${MAKE_VERSION})
-MAKEFLAGS =-Rrsij -Oline
-  else
-    ifeq (3.82,${MAKE_VERSION})
-MAKEFLAGS =-Rrsi
-    else
-      ${error Requires GNU Make 3.82 or higher}
-    endif
-  endif
+# Checking version of GNU Make
+
+AT_LEAST := 4.0
+OK := ${filter ${AT_LEAST}, \
+               ${firstword ${sort ${MAKE_VERSION} ${AT_LEAST}}}}
+
+ifeq (,${OK})
+${error Requires GNU Make ${AT_LEAST} or higher}
 endif
 
+CAMLC := ${shell which camlc}
+
+# Debugging information
+
 ifeq (,${MAKECMDGOALS})
-${if ${DEBUG},${info No command goals.}}
-else 
-${if ${DEBUG},${info Command goals: ${MAKECMDGOALS}}}
+  ${if ${DEBUG},${info No command goals.}}
+else ifeq (${words ${MAKECMDGOALS}},1)
+  ${if ${DEBUG},${info Command goal: ${MAKECMDGOALS}}}
 endif
 
 .ONESHELL:        # One call to the shell per recipe
@@ -449,7 +449,7 @@ rm -f .${1}.wrn
 printf "Compiling ${1}"
 flags="$$(sed -n 's/^camlc: \(.*\)/\1/p' .${1}.tag 2>/dev/null)"
 printf "..."
-camlc ${CFLAGS} $$flags -I ${OBJDIR} -c ${1} > .${1}.err 2>&1
+${CAMLC} ${CFLAGS} $$flags -I ${OBJDIR} -c ${1} > .${1}.err 2>&1
 lines="$$(wc -l ${1} | sed 's/ *\([0-9]\+\) .*/\1/g')"
 if test -s .${1}.err
 then if grep -q "Warning:" .${1}.err > /dev/null 2>&1
@@ -649,10 +649,10 @@ elif test -e $$err -a -z "$$updates"
                  echo "This is valid but may be a design issue."
             fi
             printf "Linking objects as $@..."
-            camlc $$flags -I ${OBJDIR} \
+            ${CAMLC} $$flags -I ${OBJDIR} \
                   -o $@ $$(echo $$(cat .obj)) >| $$err 2>&1
        else printf "Linking objects as $@..."
-            camlc $$flags -I ${OBJDIR} \
+            ${CAMLC} $$flags -I ${OBJDIR} \
                   -o $@ ${OBJ:%=%.zo} >| $$err 2>&1
        fi
        if test -s $$err
@@ -676,7 +676,7 @@ endef
 .PHONY: FORCE
 FORCE: ;
 
-# Linking bytecode 
+# Linking bytecode
 
 BYTE_TAG := ${wildcard .${BIN}.tag}
 
